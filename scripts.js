@@ -58,10 +58,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('patient-login-tab').addEventListener('click', function() {
             showLoginMessage('patient');
+            document.getElementById('patient-login-tab').classList.add('active');
+            document.getElementById('doctor-login-tab').classList.remove('active');
         });
 
         document.getElementById('doctor-login-tab').addEventListener('click', function() {
             showLoginMessage('doctor');
+            document.getElementById('doctor-login-tab').classList.add('active');
+            document.getElementById('patient-login-tab').classList.remove('active');
+        });
+
+        document.getElementById('switch-role-button').addEventListener('click', function() {
+            const currentRole = loginRoleMessage.innerText.includes('patient') ? 'patient' : 'doctor';
+            const newRole = currentRole === 'patient' ? 'doctor' : 'patient';
+            showLoginMessage(newRole);
+            if (newRole === 'doctor') {
+                document.getElementById('doctor-login-tab').classList.add('active');
+                document.getElementById('patient-login-tab').classList.remove('active');
+            } else {
+                document.getElementById('patient-login-tab').classList.add('active');
+                document.getElementById('doctor-login-tab').classList.remove('active');
+            }
         });
     }
 
@@ -103,10 +120,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('patient-register-tab').addEventListener('click', function() {
             showRegisterMessage('patient');
+            document.getElementById('patient-register-tab').classList.add('active');
+            document.getElementById('doctor-register-tab').classList.remove('active');
         });
 
         document.getElementById('doctor-register-tab').addEventListener('click', function() {
             showRegisterMessage('doctor');
+            document.getElementById('doctor-register-tab').classList.add('active');
+            document.getElementById('patient-register-tab').classList.remove('active');
+        });
+
+        document.getElementById('switch-role-register-button').addEventListener('click', function() {
+            const currentRole = registerRoleMessage.innerText.includes('patient') ? 'patient' : 'doctor';
+            const newRole = currentRole === 'patient' ? 'doctor' : 'patient';
+            showRegisterMessage(newRole);
+            if (newRole === 'doctor') {
+                document.getElementById('doctor-register-tab').classList.add('active');
+                document.getElementById('patient-register-tab').classList.remove('active');
+            } else {
+                document.getElementById('patient-register-tab').classList.add('active');
+                document.getElementById('doctor-register-tab').classList.remove('active');
+            }
         });
     }
 });
