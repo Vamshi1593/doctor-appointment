@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="login-signup-tabs">
+            <button id="patient-login-tab" class="active">Patient Login</button>
+            <button id="doctor-login-tab">Doctor Login</button>
+        </div>
+        <div id="login-message">
+            <p id="login-role-message">Logging in as patient</p>
+            <button id="switch-role-button">Switch to Doctor</button>
+        </div>
+        <form id="login-form">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <a href="#" class="forgot-password">Forgot password?</a>
+            <button type="submit" class="login-btn">Login</button>
+            <p class="signup-text">Not a member? <a href="#" id="signup-link">Signup now.</a></p>
+        </form>
+    </div>
+    <script src="scripts.js"></script>
+</body>
+</html>

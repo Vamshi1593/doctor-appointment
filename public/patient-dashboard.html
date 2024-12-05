@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="profile-panel">
+            <h2>Patient Profile</h2>
+            <p id="patient-name">Name: John Doe</p>
+            <p id="patient-city">City: New York</p>
+            <p id="patient-phone">Phone: 123-456-7890</p>
+            <p id="patient-email">Email: john.doe@example.com</p>
+            <p id="patient-age">Age: 30</p>
+            <p id="patient-sex">Sex: Male</p>
+            <h3>Booked Appointments</h3>
+            <ul id="patient-appointments">
+                <!-- Appointments will be dynamically inserted here -->
+            </ul>
+        </div>
+        <div class="main-panel">
+            <h2>List of Hospitals</h2>
+            <div id="hospital-list">
+                <!-- Hospital and doctor details will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+    <div id="appointment-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Book Appointment</h2>
+            <form id="appointment-form">
+                <input type="date" id="appointment-date" required>
+                <input type="time" id="appointment-time" required>
+                <button type="submit">Book</button>
+            </form>
+        </div>
+    </div>
+    <script src="scripts.js"></script>
+</body>
+</html>

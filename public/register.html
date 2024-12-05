@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="login-signup-tabs">
+            <button id="patient-register-tab" class="active">Patient Register</button>
+            <button id="doctor-register-tab">Doctor Register</button>
+        </div>
+        <div id="register-message">
+            <p id="register-role-message">Registering as patient</p>
+            <button id="switch-role-register-button">Switch to Doctor</button>
+        </div>
+        <form id="register-form">
+            <div id="patient-fields">
+                <input type="text" id="patient-name" placeholder="Full Name" required>
+                <input type="password" id="patient-password" placeholder="Password" required>
+                <input type="text" id="patient-city" placeholder="City" required>
+                <input type="tel" id="patient-phone" placeholder="Phone Number" required>
+                <input type="email" id="patient-email" placeholder="Email" required>
+                <input type="number" id="patient-age" placeholder="Age" required>
+                <select id="patient-sex">
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div id="doctor-fields" style="display: none;">
+                <input type="text" id="doctor-name" placeholder="Full Name" required>
+                <input type="password" id="doctor-password" placeholder="Password" required>
+                <input type="text" id="doctor-qualification" placeholder="Qualification" required>
+                <input type="text" id="hospital-name" placeholder="Hospital Name" required>
+                <input type="email" id="doctor-email" placeholder="Email" required>
+                <input type="tel" id="doctor-phone" placeholder="Phone Number" required>
+                <input type="text" id="doctor-address" placeholder="Address" required>
+            </div>
+            <button type="submit" class="register-btn">Register</button>
+        </form>
+    </div>
+    <script src="scripts.js"></script>
+</body>
+</html>
