@@ -77,3 +77,12 @@ input, select {
     color: #8e44ad;
     text-decoration: none;
 }
+
+h1 {
+    color: #fff;
+}
+
+#username-display {
+    color: #fff;
+    font-size: 18px;
+}

@@ -7,38 +7,62 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="dashboard-container">
-        <div class="profile-panel">
-            <h2>Patient Profile</h2>
-            <p id="patient-name">Name: John Doe</p>
-            <p id="patient-city">City: New York</p>
-            <p id="patient-phone">Phone: 123-456-7890</p>
-            <p id="patient-email">Email: john.doe@example.com</p>
-            <p id="patient-age">Age: 30</p>
-            <p id="patient-sex">Sex: Male</p>
-            <h3>Booked Appointments</h3>
-            <ul id="patient-appointments">
-                <!-- Appointments will be dynamically inserted here -->
-            </ul>
-        </div>
-        <div class="main-panel">
-            <h2>List of Hospitals</h2>
-            <div id="hospital-list">
-                <!-- Hospital and doctor details will be dynamically inserted here -->
-            </div>
-        </div>
-    </div>
-    <div id="appointment-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Book Appointment</h2>
-            <form id="appointment-form">
-                <input type="date" id="appointment-date" required>
-                <input type="time" id="appointment-time" required>
-                <button type="submit">Book</button>
-            </form>
-        </div>
-    </div>
-    <script src="scripts.js"></script>
+    <h1>Welcome to Patient Dashboard</h1>
+    <p id="username-display"></p>
+    <h2>Registered Doctors</h2>
+    <ul id="doctor-list"></ul>
+    <h2>Book an Appointment</h2>
+    <form id="appointment-form">
+        <select id="doctor-select" required></select>
+        <input type="datetime-local" id="appointment-date" required>
+        <textarea id="appointment-details" placeholder="Appointment Details" required></textarea>
+        <button type="submit">Book Appointment</button>
+    </form>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const username = urlParams.get('username');
+            document.getElementById('username-display').innerText = `Hello, ${username}`;
+
+            // Fetch registered doctors
+            fetch('/doctors')
+                .then(response => response.json())
+                .then(data => {
+                    const doctorList = document.getElementById('doctor-list');
+                    const doctorSelect = document.getElementById('doctor-select');
+                    data.forEach(doctor => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = `Dr. ${doctor.name} - ${doctor.qualification}, ${doctor.hospitalName}`;
+                        doctorList.appendChild(listItem);
+
+                        const option = document.createElement('option');
+                        option.value = doctor.username;
+                        option.textContent = `Dr. ${doctor.name}`;
+                        doctorSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching doctors:', error));
+            
+            // Handle appointment booking
+            const appointmentForm = document.getElementById('appointment-form');
+            appointmentForm.addEventListener('submit', event => {
+                event.preventDefault();
+                const doctorUsername = document.getElementById('doctor-select').value;
+                const appointmentDate = document.getElementById('appointment-date').value;
+                const details = document.getElementById('appointment-details').value;
+
+                fetch('/appointments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ doctorUsername, patientUsername: username, appointmentDate, details })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                })
+                .catch(error => console.error('Error booking appointment:', error));
+            });
+        });
+    </script>
 </body>
 </html>

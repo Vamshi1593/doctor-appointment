@@ -1,23 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
-    const loginMessage = document.getElementById('login-message');
-    const registerMessage = document.getElementById('register-message');
     const loginRoleMessage = document.getElementById('login-role-message');
     const registerRoleMessage = document.getElementById('register-role-message');
-    const switchRoleLoginButton = document.getElementById('switch-role-button');
-    const switchRoleRegisterButton = document.getElementById('switch-role-register-button');
     const patientFields = document.getElementById('patient-fields');
     const doctorFields = document.getElementById('doctor-fields');
 
-    function showMessage(role, messageDiv, roleMessage, switchButton) {
-        roleMessage.innerText = `Logging in as ${role}`;
-        switchButton.innerText = role === 'patient' ? 'Switch to Doctor' : 'Switch to Patient';
+    function showLoginMessage(role) {
+        loginRoleMessage.innerText = `Logging in as ${role}`;
     }
 
     function showRegisterMessage(role) {
         registerRoleMessage.innerText = `Registering as ${role}`;
-        switchRoleRegisterButton.innerText = role === 'patient' ? 'Switch to Doctor' : 'Switch to Patient';
         if (role === 'patient') {
             patientFields.style.display = 'block';
             doctorFields.style.display = 'none';
@@ -35,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const password = document.getElementById('password').value;
             const role = loginRoleMessage.innerText.includes('patient') ? 'patient' : 'doctor';
 
+            // Fetch user details and validate credentials
             fetch('/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -43,10 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(response => response.json())
             .then(data => {
                 if (data.message === 'Login successful') {
+                    alert(data.message);
                     if (role === 'patient') {
-                        window.location.href = 'patient-dashboard.html';
+                        window.location.href = `patient-dashboard.html?username=${data.user.username}`;
                     } else if (role === 'doctor') {
-                        window.location.href = 'doctor-dashboard.html';
+                        window.location.href = `doctor-dashboard.html?username=${data.user.username}`;
                     }
                 } else {
                     alert(data.message);
@@ -61,24 +57,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.getElementById('patient-login-tab').addEventListener('click', function() {
-            showMessage('patient', loginMessage, loginRoleMessage, switchRoleLoginButton);
+            showLoginMessage('patient');
         });
 
         document.getElementById('doctor-login-tab').addEventListener('click', function() {
-            showMessage('doctor', loginMessage, loginRoleMessage, switchRoleLoginButton);
-        });
-
-        switchRoleLoginButton.addEventListener('click', function() {
-            const currentRole = loginRoleMessage.innerText.includes('patient') ? 'patient' : 'doctor';
-            const newRole = currentRole === 'patient' ? 'doctor' : 'patient';
-            showMessage(newRole, loginMessage, loginRoleMessage, switchRoleLoginButton);
-            if (newRole === 'doctor') {
-                document.getElementById('doctor-login-tab').classList.add('active');
-                document.getElementById('patient-login-tab').classList.remove('active');
-            } else {
-                document.getElementById('patient-login-tab').classList.add('active');
-                document.getElementById('doctor-login-tab').classList.remove('active');
-            }
+            showLoginMessage('doctor');
         });
     }
 
@@ -93,14 +76,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 username,
                 password,
                 name: role === 'patient' ? document.getElementById('patient-name').value : document.getElementById('doctor-name').value,
-                city: role === 'patient' ? document.getElementById('patient-city').value : '',
-                phone: document.getElementById('patient-phone').value || document.getElementById('doctor-phone').value,
-                email: document.getElementById('patient-email').value || document.getElementById('doctor-email').value,
-                age: role === 'patient' ? document.getElementById('patient-age').value : '',
-                sex: role === 'patient' ? document.getElementById('patient-sex').value : '',
-                qualification: role === 'doctor' ? document.getElementById('doctor-qualification').value : '',
-                hospitalName: role === 'doctor' ? document.getElementById('hospital-name').value : '',
-                address: role === 'doctor' ? document.getElementById('doctor-address').value : ''
+                city: document.getElementById('patient-city')?.value,
+                phone: document.getElementById('patient-phone')?.value || document.getElementById('doctor-phone')?.value,
+                email: document.getElementById('patient-email')?.value || document.getElementById('doctor-email')?.value,
+                age: document.getElementById('patient-age')?.value,
+                sex: document.getElementById('patient-sex')?.value,
+                qualification: document.getElementById('doctor-qualification')?.value,
+                hospitalName: document.getElementById('hospital-name')?.value,
+                address: document.getElementById('doctor-address')?.value
             };
 
             fetch('/register', {
@@ -112,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(data => {
                 alert(data.message);
                 if (data.message === 'Registration successful') {
-                    window.location.href = `login.html?role=${role}`;
+                    window.location.href = 'login.html';
                 }
             })
             .catch(error => console.error('Error:', error));
@@ -124,12 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('doctor-register-tab').addEventListener('click', function() {
             showRegisterMessage('doctor');
-        });
-
-        switchRoleRegisterButton.addEventListener('click', function() {
-            const currentRole = registerRoleMessage.innerText.includes('patient') ? 'patient' : 'doctor';
-            const newRole = currentRole === 'patient' ? 'doctor' : 'patient';
-            showRegisterMessage(newRole);
         });
     }
 });

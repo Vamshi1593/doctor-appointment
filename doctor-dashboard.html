@@ -7,23 +7,30 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="dashboard-container">
-        <div class="profile-panel">
-            <h2>Doctor Profile</h2>
-            <p id="doctor-name">Name: Dr. Smith</p>
-            <p id="doctor-qualification">Qualification: MBBS, MD</p>
-            <p id="doctor-hospital">Hospital: General Hospital</p>
-            <p id="doctor-email">Email: dr.smith@example.com</p>
-            <p id="doctor-phone">Phone: 987-654-3210</p>
-            <p id="doctor-address">Address: 123 Medical Street</p>
-        </div>
-        <div class="main-panel">
-            <h2>List of Appointments</h2>
-            <ul id="doctor-appointments">
-                <!-- Appointments will be dynamically inserted here -->
-            </ul>
-        </div>
-    </div>
-    <script src="scripts.js"></script>
+    <h1>Welcome to Doctor Dashboard</h1>
+    <p id="username-display"></p>
+    <h2>Your Appointments</h2>
+    <ul id="appointment-list"></ul>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const username = urlParams.get('username');
+            document.getElementById('username-display').innerText = `Hello, Dr. ${username}`;
+
+            // Fetch appointments for the doctor
+            fetch(`/appointments/${username}`)
+                .then(response => response.json())
+                .then(data => {
+                    const appointmentList = document.getElementById('appointment-list');
+                    data.forEach(appointment => {
+                        const listItem = document.createElement('li');
+                        const appointmentDate = new Date(appointment.appointmentDate).toLocaleString();
+                        listItem.textContent = `Appointment with ${appointment.patientUsername} on ${appointmentDate} - ${appointment.details}`;
+                        appointmentList.appendChild(listItem);
+                    });
+                })
+                .catch(error => console.error('Error fetching appointments:', error));
+        });
+    </script>
 </body>
 </html>
