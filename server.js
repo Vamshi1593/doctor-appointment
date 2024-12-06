@@ -1,126 +1,119 @@
+// Required modules
 const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-const path = require('path');
-const bcrypt = require('bcrypt');
+const bodyParser = require('body-parser');
 
+// Initialize app
 const app = express();
-const PORT = process.env.PORT || 3000;
-const saltRounds = 10; // Number of rounds for bcrypt hashing
+const port = 3000;
 
 // Middleware
 app.use(bodyParser.json());
-app.use(cors());
-app.use(express.static(path.join(__dirname, 'public')));
 
-// Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/doctor_appointment');
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', () => {
-    console.log('Connected to MongoDB');
-});
+// MongoDB connection
+mongoose.connect('mongodb://localhost:27017/healthApp', { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('MongoDB connected'))
+  .catch((err) => console.error('MongoDB connection error:', err));
 
-// Define Mongoose Schemas and Models
+// User schema
 const userSchema = new mongoose.Schema({
-    username: String,
-    password: String,
-    role: String,
-    name: String,
-    age: Number,
-    gender: String,
-    city: String,
-    phone: String,
-    email: String,
-    qualification: String,
-    hospitalName: String,
-    address: String
-});
-
-const appointmentSchema = new mongoose.Schema({
-    doctorUsername: String,
-    patientUsername: String,
-    appointmentDate: Date,
-    details: String
+  name: String,
+  email: { type: String, unique: true },
+  password: String,
+  role: { type: String, enum: ['patient', 'doctor'] },
+  phone: String,
+  city: String,
+  age: Number,
+  sex: String,
+  qualification: String,  // Only for doctor
+  hospital: String,       // Only for doctor
+  address: String         // Only for doctor
 });
 
 const User = mongoose.model('User', userSchema);
-const Appointment = mongoose.model('Appointment', appointmentSchema);
 
-// Registration Endpoint
+// JWT secret key
+const JWT_SECRET = 'your-secret-key';
+
+// Register route
 app.post('/register', async (req, res) => {
-    const { username, password, name, age, gender, role, city, phone, email, qualification, hospitalName, address } = req.body;
-    try {
-        const user = await User.findOne({ username });
-        if (user) return res.status(400).json({ message: 'Username already exists' });
+  const { name, email, password, role, phone, city, age, sex, qualification, hospital, address } = req.body;
 
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-        const newUser = new User({ username, password: hashedPassword, name, age, gender, role, city, phone, email, qualification, hospitalName, address });
-        await newUser.save();
+  // Validate required fields
+  if (!name || !email || !password || !role || !phone) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
 
-        res.json({ message: 'Registration successful', user: newUser });
-    } catch (err) {
-        return res.status(500).send(err);
-    }
+  // Check if user already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return res.status(400).json({ message: 'Email is already registered' });
+  }
+
+  // Hash the password
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  // Create new user
+  const newUser = new User({
+    name,
+    email,
+    password: hashedPassword,
+    role,
+    phone,
+    city,
+    age,
+    sex,
+    qualification,
+    hospital,
+    address
+  });
+
+  try {
+    await newUser.save();
+    res.status(201).json({ message: 'Registration successful' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'An error occurred during registration' });
+  }
 });
 
-// Login Endpoint
+// Login route
 app.post('/login', async (req, res) => {
-    const { username, password, role } = req.body;
-    try {
-        const user = await User.findOne({ username, role });
-        if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+  const { username, password, role } = req.body;
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) return res.status(401).json({ message: 'Invalid credentials' });
+  if (!username || !password || !role) {
+    return res.status(400).json({ message: 'Username, password, and role are required' });
+  }
 
-        res.json({ message: 'Login successful', user });
-    } catch (err) {
-        return res.status(500).send(err);
+  // Find user by email
+  const user = await User.findOne({ email: username, role });
+
+  if (!user) {
+    return res.status(400).json({ message: `No ${role} found with the provided credentials` });
+  }
+
+  // Compare the password
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    return res.status(400).json({ message: 'Invalid password' });
+  }
+
+  // Generate JWT token
+  const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
+
+  res.json({
+    message: 'Login successful',
+    token,
+    user: {
+      username: user.name,
+      role: user.role
     }
+  });
 });
 
-// Fetch Doctor Details Endpoint
-app.get('/doctors', async (req, res) => {
-    try {
-        const doctors = await User.find({ role: 'doctor' }, '-password'); // Exclude password from response
-        res.json(doctors);
-    } catch (err) {
-        return res.status(500).send(err);
-    }
-});
-
-// Book Appointment Endpoint
-app.post('/appointments', async (req, res) => {
-    const { doctorUsername, patientUsername, appointmentDate, details } = req.body;
-    try {
-        const newAppointment = new Appointment({ doctorUsername, patientUsername, appointmentDate, details });
-        await newAppointment.save();
-
-        res.json({ message: 'Appointment booked successfully', appointment: newAppointment });
-    } catch (err) {
-        return res.status(500).send(err);
-    }
-});
-
-// Fetch Appointments for a Doctor
-app.get('/appointments/:doctorUsername', async (req, res) => {
-    const { doctorUsername } = req.params;
-    try {
-        const appointments = await Appointment.find({ doctorUsername });
-        res.json(appointments);
-    } catch (err) {
-        return res.status(500).send(err);
-    }
-});
-
-// Serve index.html for root URL
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-// Start the server
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+// Server listening
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });

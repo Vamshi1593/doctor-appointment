@@ -7,17 +7,58 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div class="dashboard-header">
+        <div class="dropdown">
+            <button class="dropbtn">Menu</button>
+            <div class="dropdown-content">
+                <a id="profile-button" href="#">Profile</a>
+                <a id="appointments-button" href="#">Booked Appointments</a>
+            </div>
+        </div>
+    </div>
     <h1>Welcome to Patient Dashboard</h1>
-    <p id="username-display"></p>
-    <h2>Registered Doctors</h2>
-    <ul id="doctor-list"></ul>
-    <h2>Book an Appointment</h2>
-    <form id="appointment-form">
-        <select id="doctor-select" required></select>
-        <input type="datetime-local" id="appointment-date" required>
-        <textarea id="appointment-details" placeholder="Appointment Details" required></textarea>
-        <button type="submit">Book Appointment</button>
-    </form>
+    <div class="center-content">
+        <h2>Registered Doctors</h2>
+        <table id="doctor-table" class="doctor-table"></table>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content">
+            <span id="close-profile-modal" class="close">&times;</span>
+            <h2>Profile</h2>
+            <p id="profile-name"></p>
+            <p id="profile-age"></p>
+            <p id="profile-gender"></p>
+            <p id="profile-city"></p>
+            <p id="profile-phone"></p>
+            <p id="profile-email"></p>
+        </div>
+    </div>
+
+    <!-- Appointments Modal -->
+    <div id="appointments-modal" class="modal">
+        <div class="modal-content">
+            <span id="close-appointments-modal" class="close">&times;</span>
+            <h2>Your Booked Appointments</h2>
+            <ul id="appointments-list"></ul>
+        </div>
+    </div>
+
+    <!-- Book Appointment Modal -->
+    <div id="appointment-modal" class="modal">
+        <div class="modal-content">
+            <span id="close-appointment-modal" class="close">&times;</span>
+            <h2>Book Appointment</h2>
+            <form id="appointment-form">
+                <input type="hidden" id="doctor-username">
+                <input type="datetime-local" id="appointment-date" required>
+                <textarea id="appointment-details" placeholder="Appointment Details" required></textarea>
+                <button type="submit">Book Appointment</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -28,17 +69,34 @@
             fetch('/doctors')
                 .then(response => response.json())
                 .then(data => {
-                    const doctorList = document.getElementById('doctor-list');
-                    const doctorSelect = document.getElementById('doctor-select');
-                    data.forEach(doctor => {
-                        const listItem = document.createElement('li');
-                        listItem.textContent = `Dr. ${doctor.name} - ${doctor.qualification}, ${doctor.hospitalName}`;
-                        doctorList.appendChild(listItem);
+                    const doctorTable = document.getElementById('doctor-table');
+                    let row;
+                    data.forEach((doctor, index) => {
+                        if (index % 2 === 0) {
+                            row = document.createElement('tr');
+                            doctorTable.appendChild(row);
+                        }
+                        const cell = document.createElement('td');
+                        cell.innerHTML = `
+                            <div class="doctor-card">
+                                <h3 class="hospital-name">${doctor.hospitalName}</h3>
+                                <p><strong>Name:</strong> Dr. ${doctor.name}</p>
+                                <p><strong>Qualification:</strong> ${doctor.qualification}</p>
+                                <p><strong>Contact Number:</strong> ${doctor.phone}</p>
+                                <p><strong>Address:</strong> ${doctor.address}</p>
+                                <div class="book-appointment-btn-wrapper">
+                                    <button class="book-appointment-btn" data-doctor="${doctor.username}">Book Appointment</button>
+                                </div>
+                            </div>
+                        `;
+                        row.appendChild(cell);
+                    });
 
-                        const option = document.createElement('option');
-                        option.value = doctor.username;
-                        option.textContent = `Dr. ${doctor.name}`;
-                        doctorSelect.appendChild(option);
+                    document.querySelectorAll('.book-appointment-btn').forEach(button => {
+                        button.addEventListener('click', () => {
+                            document.getElementById('doctor-username').value = button.getAttribute('data-doctor');
+                            document.getElementById('appointment-modal').style.display = 'block';
+                        });
                     });
                 })
                 .catch(error => console.error('Error fetching doctors:', error));
@@ -47,7 +105,7 @@
             const appointmentForm = document.getElementById('appointment-form');
             appointmentForm.addEventListener('submit', event => {
                 event.preventDefault();
-                const doctorUsername = document.getElementById('doctor-select').value;
+                const doctorUsername = document.getElementById('doctor-username').value;
                 const appointmentDate = document.getElementById('appointment-date').value;
                 const details = document.getElementById('appointment-details').value;
 
@@ -59,8 +117,82 @@
                 .then(response => response.json())
                 .then(data => {
                     alert(data.message);
+                    document.getElementById('appointment-modal').style.display = 'none';
                 })
                 .catch(error => console.error('Error booking appointment:', error));
+            });
+
+            // Profile button
+            const profileButton = document.getElementById('profile-button');
+            const profileModal = document.getElementById('profile-modal');
+            const closeProfileModal = document.getElementById('close-profile-modal');
+
+            profileButton.addEventListener('click', () => {
+                fetch(`/profile/${username}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('profile-name').innerText = `Name: ${data.name}`;
+                        document.getElementById('profile-age').innerText = `Age: ${data.age}`;
+                        document.getElementById('profile-gender').innerText = `Gender: ${data.gender}`;
+                        document.getElementById('profile-city').innerText = `City: ${data.city}`;
+                        document.getElementById('profile-phone').innerText = `Phone: ${data.phone}`;
+                        document.getElementById('profile-email').innerText = `Email: ${data.email}`;
+                        profileModal.style.display = 'block';
+                    })
+                    .catch(error => console.error('Error fetching profile:', error));
+            });
+
+            closeProfileModal.addEventListener('click', () => {
+                profileModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target === profileModal) {
+                    profileModal.style.display = 'none';
+                }
+            });
+
+            // Appointments button
+            const appointmentsButton = document.getElementById('appointments-button');
+            const appointmentsModal = document.getElementById('appointments-modal');
+            const closeAppointmentsModal = document.getElementById('close-appointments-modal');
+            const appointmentsList = document.getElementById('appointments-list');
+
+            appointmentsButton.addEventListener('click', () => {
+                fetch(`/appointments/${username}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        appointmentsList.innerHTML = ''; // Clear previous appointments
+                        data.forEach(appointment => {
+                            const listItem = document.createElement('li');
+                            const appointmentDate = new Date(appointment.appointmentDate).toLocaleString();
+                            listItem.textContent = `Appointment with Dr. ${appointment.doctorUsername} on ${appointmentDate} - ${appointment.details}`;
+                            appointmentsList.appendChild(listItem);
+                        });
+                        appointmentsModal.style.display = 'block';
+                    })
+                    .catch(error => console.error('Error fetching appointments:', error));
+            });
+
+            closeAppointmentsModal.addEventListener('click', () => {
+                appointmentsModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target === appointmentsModal) {
+                    appointmentsModal.style.display = 'none';
+                }
+            });
+
+            const closeAppointmentModal = document.getElementById('close-appointment-modal');
+            closeAppointmentModal.addEventListener('click', () => {
+                document.getElementById('appointment-modal').style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target === document.getElementById('appointment-modal')) {
+                    document.getElementById('appointment-modal').style.display = 'none';
+                }
             });
         });
     </script>

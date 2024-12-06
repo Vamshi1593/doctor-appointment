@@ -15,13 +15,30 @@
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const username = urlParams.get('username');
+
+            if (!username) {
+                alert('Username not provided. Redirecting to login page.');
+                window.location.href = 'login.html';
+                return;
+            }
+
             document.getElementById('username-display').innerText = `Hello, Dr. ${username}`;
 
             // Fetch appointments for the doctor
             fetch(`/appointments/${username}`)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch appointments.');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     const appointmentList = document.getElementById('appointment-list');
+                    if (data.length === 0) {
+                        appointmentList.innerHTML = '<li>No appointments found.</li>';
+                        return;
+                    }
+
                     data.forEach(appointment => {
                         const listItem = document.createElement('li');
                         const appointmentDate = new Date(appointment.appointmentDate).toLocaleString();
@@ -29,7 +46,10 @@
                         appointmentList.appendChild(listItem);
                     });
                 })
-                .catch(error => console.error('Error fetching appointments:', error));
+                .catch(error => {
+                    console.error('Error fetching appointments:', error);
+                    alert('Could not load appointments. Please try again.');
+                });
         });
     </script>
 </body>

@@ -5,141 +5,131 @@ document.addEventListener('DOMContentLoaded', () => {
     const registerRoleMessage = document.getElementById('register-role-message');
     const patientFields = document.getElementById('patient-fields');
     const doctorFields = document.getElementById('doctor-fields');
+    const patientLoginTab = document.getElementById('patient-login-tab');
+    const doctorLoginTab = document.getElementById('doctor-login-tab');
+    const patientRegisterTab = document.getElementById('patient-register-tab');
+    const doctorRegisterTab = document.getElementById('doctor-register-tab');
 
-    function showLoginMessage(role) {
-        loginRoleMessage.innerText = `Logging in as ${role}`;
+    function toggleActiveTab(selectedTab, otherTab) {
+        selectedTab.classList.add('active');
+        otherTab.classList.remove('active');
     }
 
-    function showRegisterMessage(role) {
-        registerRoleMessage.innerText = `Registering as ${role}`;
-        if (role === 'patient') {
-            patientFields.style.display = 'block';
-            doctorFields.style.display = 'none';
-        } else {
-            patientFields.style.display = 'none';
-            doctorFields.style.display = 'block';
+    function showMessageAndFields(role, isLogin) {
+        const messageElement = isLogin ? loginRoleMessage : registerRoleMessage;
+        const isPatient = role === 'patient';
+
+        messageElement.innerText = `${isLogin ? 'Logging in' : 'Registering'} as ${role}`;
+        if (!isLogin) {
+            patientFields.style.display = isPatient ? 'block' : 'none';
+            doctorFields.style.display = isPatient ? 'none' : 'block';
         }
     }
 
     // Handle login
     if (loginForm) {
-        loginForm.addEventListener('submit', function(event) {
+        patientLoginTab.addEventListener('click', () => {
+            toggleActiveTab(patientLoginTab, doctorLoginTab);
+            showMessageAndFields('patient', true);
+        });
+
+        doctorLoginTab.addEventListener('click', () => {
+            toggleActiveTab(doctorLoginTab, patientLoginTab);
+            showMessageAndFields('doctor', true);
+        });
+
+        loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
             const role = loginRoleMessage.innerText.includes('patient') ? 'patient' : 'doctor';
 
-            // Fetch user details and validate credentials
-            fetch('/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, role })
-            })
-            .then(response => response.json())
-            .then(data => {
+            if (!username || !password) {
+                alert('Username and password are required.');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, role })
+                });
+                const data = await response.json();
+
                 if (data.message === 'Login successful') {
+                    localStorage.setItem('token', data.token);
                     alert(data.message);
-                    if (role === 'patient') {
-                        window.location.href = `patient-dashboard.html?username=${data.user.username}`;
-                    } else if (role === 'doctor') {
-                        window.location.href = `doctor-dashboard.html?username=${data.user.username}`;
-                    }
+                    window.location.href = `${role}-dashboard.html?username=${data.user.username}`;
                 } else {
                     alert(data.message);
                 }
-            })
-            .catch(error => console.error('Error:', error));
-        });
-
-        document.getElementById('signup-link').addEventListener('click', function(event) {
-            event.preventDefault();
-            window.location.href = 'register.html';
-        });
-
-        document.getElementById('patient-login-tab').addEventListener('click', function() {
-            showLoginMessage('patient');
-            document.getElementById('patient-login-tab').classList.add('active');
-            document.getElementById('doctor-login-tab').classList.remove('active');
-        });
-
-        document.getElementById('doctor-login-tab').addEventListener('click', function() {
-            showLoginMessage('doctor');
-            document.getElementById('doctor-login-tab').classList.add('active');
-            document.getElementById('patient-login-tab').classList.remove('active');
-        });
-
-        document.getElementById('switch-role-button').addEventListener('click', function() {
-            const currentRole = loginRoleMessage.innerText.includes('patient') ? 'patient' : 'doctor';
-            const newRole = currentRole === 'patient' ? 'doctor' : 'patient';
-            showLoginMessage(newRole);
-            if (newRole === 'doctor') {
-                document.getElementById('doctor-login-tab').classList.add('active');
-                document.getElementById('patient-login-tab').classList.remove('active');
-            } else {
-                document.getElementById('patient-login-tab').classList.add('active');
-                document.getElementById('doctor-login-tab').classList.remove('active');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while processing your request. Please try again later.');
             }
         });
     }
 
     // Handle registration
     if (registerForm) {
-        registerForm.addEventListener('submit', function(event) {
+        patientRegisterTab.addEventListener('click', () => {
+            toggleActiveTab(patientRegisterTab, doctorRegisterTab);
+            showMessageAndFields('patient', false);
+        });
+
+        doctorRegisterTab.addEventListener('click', () => {
+            toggleActiveTab(doctorRegisterTab, patientRegisterTab);
+            showMessageAndFields('doctor', false);
+        });
+
+        registerForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            const username = document.getElementById('patient-name').value || document.getElementById('doctor-name').value;
-            const password = document.getElementById('patient-password').value || document.getElementById('doctor-password').value;
-            const role = patientFields.style.display === 'block' ? 'patient' : 'doctor';
-            const data = {
-                username,
-                password,
-                name: role === 'patient' ? document.getElementById('patient-name').value : document.getElementById('doctor-name').value,
-                city: document.getElementById('patient-city')?.value,
-                phone: document.getElementById('patient-phone')?.value || document.getElementById('doctor-phone')?.value,
-                email: document.getElementById('patient-email')?.value || document.getElementById('doctor-email')?.value,
-                age: document.getElementById('patient-age')?.value,
-                sex: document.getElementById('patient-sex')?.value,
-                qualification: document.getElementById('doctor-qualification')?.value,
-                hospitalName: document.getElementById('hospital-name')?.value,
-                address: document.getElementById('doctor-address')?.value
-            };
-
-            fetch('/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert(data.message);
-                if (data.message === 'Registration successful') {
-                    window.location.href = 'login.html';
+            const isPatient = registerRoleMessage.innerText.includes('patient');
+            const formData = isPatient
+                ? {
+                    name: document.getElementById('patient-name').value.trim(),
+                    city: document.getElementById('patient-city').value.trim(),
+                    phone: document.getElementById('patient-phone').value.trim(),
+                    email: document.getElementById('patient-email').value.trim(),
+                    password: document.getElementById('patient-password').value.trim(),
+                    age: document.getElementById('patient-age').value.trim(),
+                    sex: document.getElementById('patient-sex').value
                 }
-            })
-            .catch(error => console.error('Error:', error));
-        });
+                : {
+                    name: document.getElementById('doctor-name').value.trim(),
+                    password: document.getElementById('doctor-password').value.trim(),
+                    qualification: document.getElementById('doctor-qualification').value.trim(),
+                    hospital: document.getElementById('hospital-name').value.trim(),
+                    email: document.getElementById('doctor-email').value.trim(),
+                    phone: document.getElementById('doctor-phone').value.trim(),
+                    address: document.getElementById('doctor-address').value.trim()
+                };
 
-        document.getElementById('patient-register-tab').addEventListener('click', function() {
-            showRegisterMessage('patient');
-            document.getElementById('patient-register-tab').classList.add('active');
-            document.getElementById('doctor-register-tab').classList.remove('active');
-        });
+            for (const field in formData) {
+                if (!formData[field]) {
+                    alert(`Please fill in the ${field.replace(/-/g, ' ')} field.`);
+                    return;
+                }
+            }
 
-        document.getElementById('doctor-register-tab').addEventListener('click', function() {
-            showRegisterMessage('doctor');
-            document.getElementById('doctor-register-tab').classList.add('active');
-            document.getElementById('patient-register-tab').classList.remove('active');
-        });
+            try {
+                const response = await fetch('http://localhost:3000/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                const data = await response.json();
 
-        document.getElementById('switch-role-register-button').addEventListener('click', function() {
-            const currentRole = registerRoleMessage.innerText.includes('patient') ? 'patient' : 'doctor';
-            const newRole = currentRole === 'patient' ? 'doctor' : 'patient';
-            showRegisterMessage(newRole);
-            if (newRole === 'doctor') {
-                document.getElementById('doctor-register-tab').classList.add('active');
-                document.getElementById('patient-register-tab').classList.remove('active');
-            } else {
-                document.getElementById('patient-register-tab').classList.add('active');
-                document.getElementById('doctor-register-tab').classList.remove('active');
+                if (data.message === 'Registration successful') {
+                    alert(data.message);
+                    window.location.href = 'login.html';
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while processing your request. Please try again later.');
             }
         });
     }

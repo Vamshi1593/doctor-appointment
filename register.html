@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styl.css">
 </head>
 <body>
     <div class="container">
@@ -13,35 +13,90 @@
             <button id="doctor-register-tab">Doctor Register</button>
         </div>
         <div id="register-message">
-            <p id="register-role-message">Registering as patient</p>
-            <button id="switch-role-register-button">Switch to Doctor</button>
+            <p id="register-role-message">Registering as Patient</p>
         </div>
         <form id="register-form">
+            <!-- Patient Fields -->
             <div id="patient-fields">
-                <input type="text" id="patient-name" placeholder="Full Name" required>
-                <input type="password" id="patient-password" placeholder="Password" required>
+                <label for="patient-name">Full Name</label>
+                <input type="text" id="patient-name" placeholder="Full Name" required oninvalid="this.setCustomValidity('Please enter your name')" oninput="this.setCustomValidity('')">
+                
+                <label for="patient-city">City</label>
                 <input type="text" id="patient-city" placeholder="City" required>
-                <input type="tel" id="patient-phone" placeholder="Phone Number" required>
+                
+                <label for="patient-phone">Phone Number</label>
+                <input type="tel" id="patient-phone" placeholder="Phone Number" required pattern="[0-9]{10}" title="Enter a valid 10-digit phone number">
+                
+                <label for="patient-email">Email</label>
                 <input type="email" id="patient-email" placeholder="Email" required>
-                <input type="number" id="patient-age" placeholder="Age" required>
-                <select id="patient-sex">
+                
+                <label for="patient-password">Password</label>
+                <input type="password" id="patient-password" placeholder="Password" required minlength="6" title="Password must be at least 6 characters long">
+                
+                <label for="patient-age">Age</label>
+                <input type="number" id="patient-age" placeholder="Age" required min="1" max="120">
+                
+                <label for="patient-sex">Sex</label>
+                <select id="patient-sex" required>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
                     <option value="other">Other</option>
                 </select>
             </div>
+            
+            <!-- Doctor Fields -->
             <div id="doctor-fields" style="display: none;">
+                <label for="doctor-name">Full Name</label>
                 <input type="text" id="doctor-name" placeholder="Full Name" required>
-                <input type="password" id="doctor-password" placeholder="Password" required>
+                
+                <label for="doctor-password">Password</label>
+                <input type="password" id="doctor-password" placeholder="Password" required minlength="6">
+                
+                <label for="doctor-qualification">Qualification</label>
                 <input type="text" id="doctor-qualification" placeholder="Qualification" required>
+                
+                <label for="hospital-name">Hospital Name</label>
                 <input type="text" id="hospital-name" placeholder="Hospital Name" required>
+                
+                <label for="doctor-email">Email</label>
                 <input type="email" id="doctor-email" placeholder="Email" required>
-                <input type="tel" id="doctor-phone" placeholder="Phone Number" required>
+                
+                <label for="doctor-phone">Phone Number</label>
+                <input type="tel" id="doctor-phone" placeholder="Phone Number" required pattern="[0-9]{10}">
+                
+                <label for="doctor-address">Address</label>
                 <input type="text" id="doctor-address" placeholder="Address" required>
             </div>
+            
             <button type="submit" class="register-btn">Register</button>
         </form>
     </div>
-    <script src="scripts.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const patientTab = document.getElementById('patient-register-tab');
+            const doctorTab = document.getElementById('doctor-register-tab');
+            const patientFields = document.getElementById('patient-fields');
+            const doctorFields = document.getElementById('doctor-fields');
+            const registerMessage = document.getElementById('register-role-message');
+            
+            // Switch to Patient Register
+            patientTab.addEventListener('click', () => {
+                patientTab.classList.add('active');
+                doctorTab.classList.remove('active');
+                patientFields.style.display = 'block';
+                doctorFields.style.display = 'none';
+                registerMessage.textContent = 'Registering as Patient';
+            });
+            
+            // Switch to Doctor Register
+            doctorTab.addEventListener('click', () => {
+                doctorTab.classList.add('active');
+                patientTab.classList.remove('active');
+                doctorFields.style.display = 'block';
+                patientFields.style.display = 'none';
+                registerMessage.textContent = 'Registering as Doctor';
+            });
+        });
+    </script>
 </body>
 </html>
